@@ -15,6 +15,16 @@ pnpm install
 
 # yarn
 yarn install
+
+# axios
+yarn add axios
+
+# Divers lib python pour le serveur Flask
+pip install python-dotenv
+pip install flask
+pip install flask_jwt_extended
+npm install jwt-decode # Permet de lire le rôle de l'utilisateur stocker dans son token JWT
+
 ```
 
 ## Development Server

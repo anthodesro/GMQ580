@@ -4,11 +4,10 @@ export default defineNuxtConfig({
     shim: false,
   },
   app: {
-    baseURL: '/spike-nuxtjs-free/', // baseURL: '/<repository>/'
-    buildAssetsDir: 'assets', // don't use "_" at the begining of the folder name to avoids nojkill conflict
+    baseURL: '/solvia/', // Assurez-vous que cela est correct
+    buildAssetsDir: 'assets', // Vérifiez que la structure des assets est correcte
     head: {
-      title:
-        "Spikeadmin Free Nuxt 3 Dashboard",
+      title: "Solvia",
     },
   },
   build: {

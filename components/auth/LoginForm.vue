@@ -1,41 +1,142 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref } from "vue";
+import axios from "axios";
+import { useRouter } from "vue-router";
+import { AxiosError } from "axios";
+
+const router = useRouter();
+const username = ref("");
+const password = ref("");
+const errorMessage = ref("");
 const checkbox = ref(false);
+
+// Validation du formulaire
+const validateForm = (): boolean => {
+  if (!username.value || !password.value) {
+    errorMessage.value = "Les champs doivent être remplis.";
+    return false;
+  }
+  return true;
+};
+
+// Fonction de connexion
+const login = async () => {
+  if (!validateForm()) return; // Validation du formulaire
+
+  try {
+    const response = await axios.post("http://127.0.0.1:5000/login", {
+      username: username.value,
+      password: password.value,
+    });
+
+    // Vérification de la présence du token et du rôle dans la réponse
+    if (response.data && response.data.access_token && response.data.role) {
+      // Déterminer si le stockage doit être persistant ou temporaire
+      const storage = checkbox.value ? localStorage : sessionStorage;
+
+      // Stocker le token et le rôle dans le bon stockage
+      storage.setItem("token", response.data.access_token);
+      storage.setItem("role", response.data.role);
+
+      // Redirection en fonction du rôle de l'utilisateur
+      switch (response.data.role) {
+        case 'admin':
+          router.push("/admin/dashboard");
+          break;
+        case 'gestio':
+          router.push("/gestio/dashboard");
+          break;
+        case 'user':
+          router.push("/dashboard/index");
+          break;
+        default:
+          router.push("/login"); // Rediriger si le rôle est invalide
+          break;
+      }
+    } else {
+      errorMessage.value = "Une erreur est survenue lors de la connexion. Vérifiez vos identifiants.";
+    }
+  } catch (error: AxiosError | any) {
+    // Gestion des erreurs de la requête
+    errorMessage.value = error.response?.data?.message || "Identifiants incorrects.";
+  }
+};
+
+
 </script>
 
 <template>
+  <div>
     <div class="d-flex align-center text-center mb-6">
-        <div class="text-h6 w-100 px-5 font-weight-regular auth-divider position-relative">
-            <span class="bg-surface px-5 py-3 position-relative text-subtitle-1 text-grey100">Your Social Campaigns</span>
-        </div>
+      <div class="text-h6 w-100 px-5 font-weight-regular auth-divider position-relative">
+        <span class="bg-surface px-5 py-3 position-relative text-subtitle-1 text-grey100">
+          Your Social Campaigns
+        </span>
+      </div>
     </div>
+
     <div>
-        <v-row class="mb-3">
-            <v-col cols="12">
-                <v-label class="font-weight-medium mb-1">Username</v-label>
-                <v-text-field variant="outlined" class="pwdInput" hide-details color="primary"></v-text-field>
-            </v-col>
-            <v-col cols="12">
-                <v-label class="font-weight-medium mb-1">Password</v-label>
-                <v-text-field variant="outlined" class="border-borderColor" type="password" hide-details
-                    color="primary"></v-text-field>
-            </v-col>
-            <v-col cols="12 " class="py-0">
-                <div class="d-flex flex-wrap align-center w-100 ">
-                    <v-checkbox hide-details color="primary">
-                        <template v-slot:label class="">Remeber this Device</template>
-                    </v-checkbox>
-                    <div class="ml-sm-auto">
-                        <RouterLink to=""
-                            class="text-primary text-decoration-none text-body-1 opacity-1 font-weight-medium">
-                            Forgot Password ?</RouterLink>
-                    </div>
-                </div>
-            </v-col>
-            <v-col cols="12">
-                <v-btn size="large" rounded="pill" color="primary" class="rounded-pill" block type="submit" flat>Sign
-                    In</v-btn>
-            </v-col>
-        </v-row>
+      <v-row class="mb-3">
+        <v-col cols="12">
+          <v-label class="font-weight-medium mb-1">Username</v-label>
+          <v-text-field
+            v-model="username"
+            variant="outlined"
+            class="pwdInput"
+            hide-details
+            color="primary"
+          ></v-text-field>
+        </v-col>
+
+        <v-col cols="12">
+          <v-label class="font-weight-medium mb-1">Password</v-label>
+          <v-text-field
+            v-model="password"
+            variant="outlined"
+            class="border-borderColor"
+            type="password"
+            hide-details
+            color="primary"
+          ></v-text-field>
+        </v-col>
+
+        <v-col cols="12" class="py-0">
+          <div class="d-flex flex-wrap align-center w-100">
+            <v-checkbox v-model="checkbox" hide-details color="primary">
+              <template v-slot:label>Remember this Device</template>
+            </v-checkbox>
+
+            <div class="ml-sm-auto">
+              <RouterLink
+                to=""
+                class="text-primary text-decoration-none text-body-1 opacity-1 font-weight-medium"
+              >
+                Forgot Password ?
+              </RouterLink>
+            </div>
+          </div>
+        </v-col>
+
+        <v-col cols="12">
+          <v-btn
+            size="large"
+            rounded="pill"
+            color="primary"
+            class="rounded-pill"
+            block
+            type="submit"
+            flat
+            @click="login"
+          >
+            Sign In
+          </v-btn>
+        </v-col>
+
+        <v-col cols="12">
+          <p v-if="errorMessage" class="text-error">{{ errorMessage }}</p>
+        </v-col>
+      </v-row>
     </div>
+  </div>
 </template>
+

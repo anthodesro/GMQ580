@@ -16,6 +16,8 @@
     "@mdi/font": "^6.5.95",
     "@nuxt/vite-builder": "^3.7.4",
     "apexcharts": "3.36.3",
+    "axios": "^1.7.9",
+    "jwt-decode": "^4.0.0",
     "sass": "^1.49.9",
     "vue": "3.3.4",
     "vue-tabler-icons": "2.9.0",

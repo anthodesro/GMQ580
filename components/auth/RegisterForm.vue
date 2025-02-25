@@ -1,4 +1,7 @@
 <script setup lang="ts">
+definePageMeta({
+  middleware: ['auth', 'admin'], // Applique les middlewares 'auth' et 'admin' uniquement à cette page
+});
 import { ref } from 'vue';
 const checkbox = ref(false);
 </script>
