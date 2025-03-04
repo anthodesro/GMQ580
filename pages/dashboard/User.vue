@@ -6,6 +6,9 @@ import ProductSales from "@/components/dashboards/ProductSales.vue";
 import UpcommingSchedule from "@/components/dashboards/UpcommingSchedule.vue";
 import TopPayingClients from "@/components/dashboards/TopPayingClients.vue";
 import ProductCards from "@/components/dashboards/ProductCards.vue";
+definePageMeta({
+  middleware: ['role']
+});
 </script>
 
 <template>

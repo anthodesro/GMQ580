@@ -6,7 +6,9 @@ import UiChildCard from '@/components/shared/UiChildCard.vue';
 import Basic from '@/components/ui-components/alert/Basic.vue';
 import Filled from '@/components/ui-components/alert/Filled.vue';
 import Closable from '@/components/ui-components/alert/Closable.vue';
-
+definePageMeta({
+  middleware: ['role']
+});
 </script>
 
 <template>

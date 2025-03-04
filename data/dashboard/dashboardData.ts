@@ -1,152 +1,77 @@
-import type { recentTrans, productPerformanceType, productsCards } from '@/types/dashboard/index';
+import { defineNuxtRouteMiddleware } from 'nuxt3';
+import sqlite3 from 'sqlite3';
 
-/*--Recent Transaction--*/
-const recentTransaction: recentTrans[] = [
-    {
-        title: '09:30 am',
-        subtitle: 'Payment received from John Doe of $385.90',
-        textcolor: 'primary',
-        boldtext: false,
-        line: true,
-        link: '',
-        url: ''
-    },
-    {
-        title: '10:00 am',
-        subtitle: 'New sale recorded',
-        textcolor: 'secondary',
-        boldtext: true,
-        line: true,
-        link: '#ML-3467',
-        url: ''
-    },
-    {
-        title: '12:00 am',
-        subtitle: 'Payment was made of $64.95 to Michael',
-        textcolor: 'success',
-        boldtext: false,
-        line: true,
-        link: '',
-        url: ''
-    },
-    {
-        title: '09:30 am',
-        subtitle: 'New sale recorded',
-        textcolor: 'warning',
-        boldtext: true,
-        line: true,
-        link: '#ML-3467',
-        url: ''
-    },
-    {
-        title: '09:30 am',
-        subtitle: 'New arrival recorded',
-        textcolor: 'error',
-        boldtext: true,
-        line: true,
-        link: '',
-        url: ''
-    },
-    {
-        title: '12:00 am',
-        subtitle: 'Payment Received',
-        textcolor: 'success',
-        boldtext: false,
-        line: false,
-        link: '',
-        url: ''
-    },
-]
+// Remplacer par vos informations de connexion à la base de données
+const DB_PATH = 'path_to_your_database.db'; // Remplacez par le chemin réel vers votre base .db
+const db = new sqlite3.Database(DB_PATH);
 
-/*Basic Table 1*/
-const productPerformance: productPerformanceType[] = [
-    {
-        id: 1,
-        name: 'Sunil Joshi',
-        post: 'Web Designer',
-        pname: 'Elite Admin',
-        status: 'Low',
-        statuscolor: 'primary',
-        budget: '$3.9'
-    },
-    {
-        id: 2,
-        name: 'Andrew McDownland',
-        post: 'Project Manager',
-        pname: 'Real Homes WP Theme',
-        status: 'Medium',
-        statuscolor: 'secondary',
-        budget: '$24.5k'
-    },
-    {
-        id: 3,
-        name: 'Christopher Jamil',
-        post: 'Project Manager',
-        pname: 'MedicalPro WP Theme',
-        status: 'High',
-        statuscolor: 'error',
-        budget: '$12.8k'
-    },
-    {
-        id: 4,
-        name: 'Nirav Joshi',
-        post: 'Frontend Engineer',
-        pname: 'Hosting Press HTML',
-        status: 'Critical',
-        statuscolor: 'success',
-        budget: '$2.4k'
-    },
-    {
-        id: 5,
-        name: 'Tim Geroge',
-        post: 'Web Designer',
-        pname: 'Hosting Press HTML',
-        status: 'Critical',
-        statuscolor: 'indigo',
-        budget: '$5.4k'
-    }
+// Middleware pour charger les données à partir de la base de données
+export default defineNuxtRouteMiddleware(async (to, from) => {
+  if (process.server) return; // Empêche l'exécution côté serveur, sessionStorage n'est pas disponible
 
-];
+  const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+  const userRole = sessionStorage.getItem('role') || localStorage.getItem('role');
 
-/*--Products Cards--*/
-import proimg1 from '/images/products/s4.jpg';
-import proimg2 from '/images/products/s5.jpg';
-import proimg3 from '/images/products/s7.jpg';
-import proimg4 from '/images/products/s11.jpg';
-const productsCard: productsCards[] = [
-    {
-        title: 'Boat Headphone',
-        link: '/',
-        photo: proimg1,
-        salesPrice: 375,
-        price: 285,
-        rating: 4
-    },
-    {
-        title: 'MacBook Air Pro',
-        link: '/',
-        photo: proimg2,
-        salesPrice: 650,
-        price: 900,
-        rating: 5
-    },
-    {
-        title: 'Red Valvet Dress',
-        link: '/',
-        photo: proimg3,
-        salesPrice: 150,
-        price: 200,
-        rating: 3
-    },
-    {
-        title: 'Cute Soft Teddybear',
-        link: '/',
-        photo: proimg4,
-        salesPrice: 285,
-        price: 345,
-        rating: 2
-    }
-];
+  if (!token || !userRole) {
+    return navigateTo('/auth/login');
+  }
 
+  // Exemple de lecture des transactions récentes
+  const recentTransaction = await new Promise<any[]>((resolve, reject) => {
+    db.all('SELECT * FROM recent_transactions ORDER BY time DESC LIMIT 6', [], (err, rows) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(rows.map(row => ({
+        title: row.time,
+        subtitle: row.description,
+        textcolor: row.textcolor,
+        boldtext: row.boldtext === 1, // Supposons que 1 = true et 0 = false
+        line: row.line === 1,
+        link: row.link || '',
+        url: row.url || ''
+      })));
+    });
+  });
 
-export { recentTransaction, productPerformance, productsCard }
+  // Exemple de lecture des performances produits
+  const productPerformance = await new Promise<any[]>((resolve, reject) => {
+    db.all('SELECT * FROM product_performance', [], (err, rows) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        post: row.post,
+        pname: row.pname,
+        status: row.status,
+        statuscolor: row.statuscolor,
+        budget: row.budget
+      })));
+    });
+  });
+
+  // Exemple de lecture des cartes de produits
+  const productsCard = await new Promise<any[]>((resolve, reject) => {
+    db.all('SELECT * FROM products_card', [], (err, rows) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(rows.map(row => ({
+        title: row.title,
+        link: row.link,
+        photo: row.photo, // Assurez-vous que le chemin est correct pour vos images
+        salesPrice: row.salesPrice,
+        price: row.price,
+        rating: row.rating
+      })));
+    });
+  });
+
+  // Vous pouvez maintenant utiliser `recentTransaction`, `productPerformance`, `productsCard` comme vous le feriez normalement.
+  return { recentTransaction, productPerformance, productsCard };
+});

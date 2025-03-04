@@ -5,14 +5,14 @@ import { useRouter } from "vue-router";
 import { AxiosError } from "axios";
 
 const router = useRouter();
-const username = ref("");
+const email = ref("");
 const password = ref("");
 const errorMessage = ref("");
 const checkbox = ref(false);
 
 // Validation du formulaire
 const validateForm = (): boolean => {
-  if (!username.value || !password.value) {
+  if (!email.value || !password.value) {
     errorMessage.value = "Les champs doivent être remplis.";
     return false;
   }
@@ -25,7 +25,7 @@ const login = async () => {
 
   try {
     const response = await axios.post("http://127.0.0.1:5000/login", {
-      username: username.value,
+      email: email.value,
       password: password.value,
     });
 
@@ -38,21 +38,8 @@ const login = async () => {
       storage.setItem("token", response.data.access_token);
       storage.setItem("role", response.data.role);
 
-      // Redirection en fonction du rôle de l'utilisateur
-      switch (response.data.role) {
-        case 'admin':
-          router.push("/admin/dashboard");
-          break;
-        case 'gestio':
-          router.push("/gestio/dashboard");
-          break;
-        case 'user':
-          router.push("/dashboard/index");
-          break;
-        default:
-          router.push("/login"); // Rediriger si le rôle est invalide
-          break;
-      }
+      // Redirection vers la page d'accueil (peu importe le rôle)
+      router.push('/');
     } else {
       errorMessage.value = "Une erreur est survenue lors de la connexion. Vérifiez vos identifiants.";
     }
@@ -62,7 +49,6 @@ const login = async () => {
   }
 };
 
-
 </script>
 
 <template>
@@ -70,7 +56,7 @@ const login = async () => {
     <div class="d-flex align-center text-center mb-6">
       <div class="text-h6 w-100 px-5 font-weight-regular auth-divider position-relative">
         <span class="bg-surface px-5 py-3 position-relative text-subtitle-1 text-grey100">
-          Your Social Campaigns
+          Gestion comptable
         </span>
       </div>
     </div>
@@ -78,9 +64,9 @@ const login = async () => {
     <div>
       <v-row class="mb-3">
         <v-col cols="12">
-          <v-label class="font-weight-medium mb-1">Username</v-label>
+          <v-label class="font-weight-medium mb-1">Adresse courriel</v-label>
           <v-text-field
-            v-model="username"
+            v-model="email"
             variant="outlined"
             class="pwdInput"
             hide-details
@@ -89,7 +75,7 @@ const login = async () => {
         </v-col>
 
         <v-col cols="12">
-          <v-label class="font-weight-medium mb-1">Password</v-label>
+          <v-label class="font-weight-medium mb-1">Mot de passe</v-label>
           <v-text-field
             v-model="password"
             variant="outlined"
@@ -103,7 +89,7 @@ const login = async () => {
         <v-col cols="12" class="py-0">
           <div class="d-flex flex-wrap align-center w-100">
             <v-checkbox v-model="checkbox" hide-details color="primary">
-              <template v-slot:label>Remember this Device</template>
+              <template v-slot:label>Mémoriser cet appareil</template>
             </v-checkbox>
 
             <div class="ml-sm-auto">
@@ -111,7 +97,7 @@ const login = async () => {
                 to=""
                 class="text-primary text-decoration-none text-body-1 opacity-1 font-weight-medium"
               >
-                Forgot Password ?
+                Mot de passe oublié ?
               </RouterLink>
             </div>
           </div>
@@ -128,7 +114,7 @@ const login = async () => {
             flat
             @click="login"
           >
-            Sign In
+            Connexion
           </v-btn>
         </v-col>
 

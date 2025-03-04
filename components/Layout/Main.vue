@@ -1,10 +1,18 @@
 <script setup lang="ts">
-import { ref, shallowRef } from 'vue';
+import { ref, computed, shallowRef } from 'vue';
 import sidebarItems from '@/components/Layout/Full/vertical-sidebar/sidebarItem';
 // Icon Imports
-import { Menu2Icon, BellRingingIcon } from 'vue-tabler-icons';
-const sidebarMenu = shallowRef(sidebarItems);
+import { Menu2Icon } from 'vue-tabler-icons';
+
 const sDrawer = ref(true);
+
+// Simuler le rôle de l'utilisateur connecté (à remplacer par l'authentification réelle)
+const userRole = ref("admin"); // Exemple : 'admin', 'user', 'guest'
+
+// Filtrer les items du menu en fonction du rôle de l'utilisateur
+const sidebarMenu = computed(() => {
+  return sidebarItems.filter(item => !item.roles || item.roles.includes(userRole.value));
+});
 
 </script>
 
@@ -14,20 +22,12 @@ const sDrawer = ref(true);
         <div class="pa-5 pl-4 ">
             <LayoutFullLogoDark />
         </div>
-        <!-- ---------------------------------------------- -->
-        <!---Navigation -->
-        <!-- ---------------------------------------------- -->
         <perfect-scrollbar class="scrollnavbar bg-containerBg overflow-y-hidden">
             <v-list class="py-4 px-4 bg-containerBg">
-                <!---Menu Loop -->
                 <template v-for="(item, i) in sidebarMenu">
-                    <!---Item Sub Header -->
                     <LayoutFullVerticalSidebarNavGroup :item="item" v-if="item.header" :key="item.title" />
-                    <!---Single Item-->
                     <LayoutFullVerticalSidebarNavItem :item="item" v-else class="leftPadding" />
-                    <!---End Single Item-->
                 </template>
-                <!-- <Moreoption/> -->
             </v-list> 
         </perfect-scrollbar>
     </v-navigation-drawer>
