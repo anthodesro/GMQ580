@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import UiParentCard from '@/components/shared/UiParentCard.vue';
+definePageMeta({
+  middleware: ['role']
+});
 </script>
 <template>
     <v-row>

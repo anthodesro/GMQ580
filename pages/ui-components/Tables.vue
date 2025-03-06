@@ -4,6 +4,10 @@ import axios from 'axios';
 import UiChildCard from '@/components/shared/UiChildCard.vue';
 import { EditIcon, TrashIcon } from 'vue-tabler-icons'; // Importation des icônes
 
+definePageMeta({
+  middleware: ['role']
+});
+
 // Liste des utilisateurs et autres variables
 const users = ref([]); // Liste des utilisateurs
 const headers = ref([
@@ -53,25 +57,29 @@ const getRoleColor = (role) => {
     }
 };
 
-// Fonctions placeholders pour supprimer et modifier un utilisateur
-const deleteUser = (userId) => {
-    // Logic for deleting user
-    console.log("Delete user with ID:", userId);
+// Fonction pour ajouter un utilisateur (placeholder)
+const addUser = () => {
+    console.log("Ajouter un utilisateur");
 };
 
+// Fonction pour supprimer un utilisateur
+const deleteUser = (userId) => {
+    console.log("Supprimer l'utilisateur avec l'ID :", userId);
+};
+
+// Fonction pour modifier un utilisateur
 const editUser = (userId) => {
-    // Logic for editing user
-    console.log("Edit user with ID:", userId);
+    console.log("Modifier l'utilisateur avec l'ID :", userId);
 };
 </script>
 
 <template>
     <v-row class="maxWidth">
-        <v-col cols="12" sm="12">
+        <v-col cols="12">
             <UiChildCard title="Registre des utilisateurs">
                 <v-row class="mb-4">
-                    <!-- Champ de recherche et bouton Ajouter dans le même row -->
-                    <v-col cols="12" sm="6" class="d-flex align-center"> <!-- Champ de recherche centré verticalement -->
+                    <!-- Champ de recherche -->
+                    <v-col cols="12" sm="6">
                         <v-text-field
                             v-model="searchQuery"
                             label="Rechercher un utilisateur"
@@ -80,8 +88,13 @@ const editUser = (userId) => {
                         />
                     </v-col>
 
-                    <v-col cols="12" sm="6" class="d-flex align-center"> <!-- Le bouton est aligné à droite et centré verticalement -->
-                        <v-btn color="primary" @click="addUser">
+                    <!-- Bouton Ajouter avec un margin-top ajusté -->
+                    <v-col cols="12" sm="6" class="d-flex justify-start">
+                        <v-btn
+                            color="primary"
+                            @click="addUser"
+                            style="margin-top: 6px;"
+                        >
                             Ajouter
                         </v-btn>
                     </v-col>
@@ -94,25 +107,28 @@ const editUser = (userId) => {
                     :items="users"
                     item-key="id"
                     class="custom-table"
-                    :sort-by="['Nom utilisateur']"
-                    :search="searchQuery" 
+                    :search="searchQuery"
                 >
-                    <template v-slot:default="{ item }">
-                        <!-- Affichage du rôle -->
-                        <v-chip :color="getRoleColor(item.role)" class="ma-2">{{ getRoleName(item.role) }}</v-chip>
+                    <!-- Slot pour afficher le rôle avec couleur -->
+                    <template v-slot:item.role="{ item }">
+                        <v-chip :color="getRoleColor(item.role)" class="ma-2">
+                            {{ getRoleName(item.role) }}
+                        </v-chip>
+                    </template>
 
-                        <!-- Actions de l'utilisateur -->
+                    <!-- Slot pour afficher les actions -->
+                    <template v-slot:item.action="{ item }">
                         <div class="d-flex justify-center">
                             <EditIcon 
                                 class="mr-2" 
                                 style="cursor: pointer;" 
                                 @click="editUser(item.id)" 
-                                color="#0085db"
+                                :color="'#0085db'"
                             />
                             <TrashIcon 
                                 style="cursor: pointer;" 
                                 @click="deleteUser(item.id)" 
-                                color="#fb977d"
+                                :color="'#fb977d'"
                             />
                         </div>
                     </template>
@@ -121,7 +137,6 @@ const editUser = (userId) => {
         </v-col>
     </v-row>
 </template>
-
 
 <style scoped>
 /* Définir la taille des icônes en utilisant la classe spécifique */

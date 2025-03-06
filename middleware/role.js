@@ -77,6 +77,27 @@ export default defineNuxtRouteMiddleware((to, from) => {
     }
   }
 
+  // Cas spécifique pour la page configuration de la section projtes
+  if (to.path === '/projet/config') {
+    if (userRole !== 'gestio' && userRole !== 'admin') {
+      return navigateTo('/auth/Unauthorized'); // Redirige vers le tableau de bord si l'utilisateur n'est pas admin
+    }
+  }
+
+  // Cas spécifique pour la page configuration de la section Admin
+  if (to.path === '/admin/config') {
+    if (userRole !== 'admin') {
+      return navigateTo('/auth/Unauthorized'); // Redirige vers le tableau de bord si l'utilisateur n'est pas admin
+    }
+  }
+  
+  // Cas spécifique pour la page configuration de la section Admin
+  if (to.path === '/admin/config') {
+    if (userRole !== 'admin') {
+      return navigateTo('/auth/Unauthorized'); // Redirige vers le tableau de bord si l'utilisateur n'est pas admin
+    }
+  }
+
   // Cas spécifique pour le tableau de bord user
   if (to.path === '/dashboard/user') {
     if (userRole !== 'user' && userRole !== 'admin') {

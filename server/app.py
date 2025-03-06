@@ -6,8 +6,9 @@ from dotenv import load_dotenv
 import os
 
 app = Flask(__name__)
-app.debug = True  # Ajouter cette ligne avant de démarrer l'app pour afficher les erreurs détaillées
+app.debug = True  # Pour afficher les erreurs détaillées
 CORS(app)  # Autoriser les requêtes depuis le frontend
+
 # Charger les variables d'environnement depuis le fichier .env
 load_dotenv()
 
@@ -20,26 +21,65 @@ print("JWT_SECRET_KEY:", app.config["JWT_SECRET_KEY"])
 
 jwt = JWTManager(app)
 
+
+# ===============================
+# 1. Initialisation de la base de données
+# ===============================
 def init_db():
-    # Initialiser la base de données avec la nouvelle structure
     with sqlite3.connect('data.db') as conn:
         cursor = conn.cursor()
         cursor.execute('''CREATE TABLE IF NOT EXISTS user (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            first_name TEXT NOT NULL,   -- Nouveau champ pour le prénom
-                            last_name TEXT NOT NULL,    -- Nouveau champ pour le nom
+                            first_name TEXT NOT NULL,
+                            last_name TEXT NOT NULL,
                             email TEXT UNIQUE NOT NULL,
                             password TEXT NOT NULL,
                             role TEXT DEFAULT 'user' NOT NULL)''')
+
+        cursor.execute('''CREATE TABLE IF NOT EXISTS project (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            name TEXT NOT NULL,
+                            description TEXT)''')
+
+        cursor.execute('''CREATE TABLE IF NOT EXISTS user_projects (
+                            user_id INTEGER,
+                            project_id INTEGER,
+                            FOREIGN KEY (user_id) REFERENCES user(id),
+                            FOREIGN KEY (project_id) REFERENCES project(id),
+                            PRIMARY KEY (user_id, project_id))''')
+
         conn.commit()
 
-# Récupérer un utilisateur
+
+# ===============================
+# 2. Fonctions Utilisateurs
+# ===============================
+
 def get_user(email):
     with sqlite3.connect('data.db') as conn:
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM user WHERE email = ?', (email,))
-        user = cursor.fetchone()  # Récupérer un seul résultat
-        return user
+        cursor.execute('SELECT id, email, first_name, last_name, role FROM user WHERE email = ?', (email,))
+        user = cursor.fetchone()
+        if user:
+            user_data = {
+                "id": user[0],
+                "email": user[1],
+                "first_name": user[2],
+                "last_name": user[3],
+                "role": user[4]
+            }
+
+            # Récupérer les projets associés
+            cursor.execute('''SELECT project.id, project.name, project.description
+                              FROM project
+                              JOIN user_projects ON project.id = user_projects.project_id
+                              WHERE user_projects.user_id = ?''', (user[0],))
+            projects = cursor.fetchall()
+            user_data["projects"] = [{"id": project[0], "name": project[1], "description": project[2]} for project in projects]
+            
+            return user_data
+        return None
+
 
 def add_user(first_name, last_name, email, password, role):
     with sqlite3.connect('data.db') as conn:
@@ -52,14 +92,30 @@ def add_user(first_name, last_name, email, password, role):
         except sqlite3.IntegrityError:
             return False
 
-# Route d'accueil
-@app.route('/')
-def index():
-    if 'username' in session:
-        return f"Bienvenue, {session['username']}! <a href='/logout'>Déconnexion</a>"
-    return redirect(url_for('login'))
 
-# Route de connexion pour JWT avec inclusion du rôle
+# ===============================
+# 3. Fonctions Projets
+# ===============================
+
+def get_projects():
+    with sqlite3.connect('data.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT id, name, description FROM project')
+        projects = cursor.fetchall()
+    return [{"id": project[0], "name": project[1], "description": project[2]} for project in projects]
+
+
+def add_project(name, description):
+    with sqlite3.connect('data.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute('INSERT INTO project (name, description) VALUES (?, ?)', (name, description))
+        conn.commit()
+
+
+# ===============================
+# 4. Authentification et gestion de session JWT
+# ===============================
+
 @app.route("/login", methods=["POST"])
 def login():
     data = request.get_json()
@@ -67,64 +123,123 @@ def login():
     password = data.get("password")
 
     user = get_user(email)
-    if user and user[4] == password:  # Vérifier le mot de passe (user[4] pour le mot de passe)
-        role = user[5]  # Récupération du rôle de l'utilisateur (user[5] pour le rôle)
-        additional_claims = {"role": role}  # Ajout du rôle dans le JWT
+    if user and user["password"] == password:
+        additional_claims = {"role": user["role"]}
         access_token = create_access_token(identity=email, additional_claims=additional_claims)
-        return jsonify(access_token=access_token, role=role)
+        return jsonify(access_token=access_token, role=user["role"])
     return jsonify({"msg": "Identifiants incorrects"}), 401
 
-# Route pour récupérer les infos de l'utilisateur après connexion
+
 @app.route("/user/me", methods=["GET"])
 @jwt_required()
 def get_current_user():
-    current_user = get_jwt_identity()  # Récupère le username et rôle depuis le token
-    return jsonify(current_user), 200
+    current_user = get_jwt_identity()
+    user_data = get_user(current_user)
+    if user_data:
+        return jsonify(user_data), 200
+    return jsonify({"msg": "Utilisateur non trouvé"}), 404
 
-# Route de déconnexion
+
 @app.route('/logout')
 def logout():
     session.pop('username', None)
     return redirect(url_for('login'))
 
-@app.route('/register', methods=['POST'])
-def register():
-    data = request.get_json()
 
-    first_name = data.get("firstName")  # Nouveau champ pour le prénom
-    last_name = data.get("lastName")    # Nouveau champ pour le nom
-    email = data.get("email")
-    password = data.get("password")
-    role = data.get("role")
-
-    if not first_name or not last_name or not email or not password:
-        return jsonify({"error": "Tous les champs sont obligatoires"}), 400
-
-    if add_user(first_name, last_name, email, password, role):
-        return jsonify({"message": "Utilisateur créé avec succès!"}), 201
-    else:
-        return jsonify({"error": "Ce email est déjà pris"}), 400
+# ===============================
+# 5. Routes API Utilisateurs
+# ===============================
 
 @app.route('/api/users', methods=["GET"])
 @jwt_required()
 def get_users():
     claims = get_jwt()
-
-    # Vérifier si l'utilisateur a les droits d'accès
     if claims.get("role") not in ["admin", "gestio"]:
         return jsonify({"msg": "Accès non autorisé"}), 403
 
-    # Récupération des utilisateurs
     with sqlite3.connect('data.db') as conn:
         cursor = conn.cursor()
         cursor.execute('SELECT id, email, role FROM user')
         users = cursor.fetchall()
 
-    print(users)
+    users_list = []
+    for user in users:
+        user_id = user[0]
+        user_data = {
+            "id": user[0],
+            "email": user[1],
+            "role": user[2]
+        }
 
-    users_list = [{"id": user[0], "email": user[1], "role": user[2]} for user in users]
+        cursor.execute('''SELECT project.id, project.name, project.description
+                          FROM project
+                          JOIN user_projects ON project.id = user_projects.project_id
+                          WHERE user_projects.user_id = ?''', (user_id,))
+        projects = cursor.fetchall()
+
+        user_data["projects"] = [{"id": project[0], "name": project[1], "description": project[2]} for project in projects]
+        users_list.append(user_data)
 
     return jsonify(users_list), 200
+
+
+@app.route('/api/user/<string:email>', methods=["GET"])
+@jwt_required()
+def get_user_by_email(email):
+    user_data = get_user(email)
+    if user_data:
+        return jsonify(user_data), 200
+    else:
+        return jsonify({"error": "Utilisateur non trouvé"}), 404
+
+
+@app.route('/api/user/<int:user_id>/projects/<int:project_id>', methods=["POST"])
+@jwt_required()
+def assign_project_to_user(user_id, project_id):
+    with sqlite3.connect('data.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT id FROM user WHERE id = ?', (user_id,))
+        user = cursor.fetchone()
+
+        cursor.execute('SELECT id FROM project WHERE id = ?', (project_id,))
+        project = cursor.fetchone()
+
+        if not user or not project:
+            return jsonify({"error": "Utilisateur ou projet non trouvé"}), 404
+
+        cursor.execute('SELECT * FROM user_projects WHERE user_id = ? AND project_id = ?', (user_id, project_id))
+        existing_association = cursor.fetchone()
+
+        if existing_association:
+            return jsonify({"message": "Ce projet est déjà associé à cet utilisateur"}), 400
+
+        cursor.execute('INSERT INTO user_projects (user_id, project_id) VALUES (?, ?)', (user_id, project_id))
+        conn.commit()
+        return jsonify({"message": "Projet associé à l'utilisateur avec succès!"}), 201
+
+
+# ===============================
+# 6. Routes API Projets
+# ===============================
+
+@app.route('/api/projects', methods=["GET"])
+@jwt_required()
+def get_all_projects():
+    projects = get_projects()
+    return jsonify(projects), 200
+
+
+@app.route('/api/projects', methods=["POST"])
+@jwt_required()
+def create_project():
+    data = request.get_json()
+    name = data.get("name")
+    description = data.get("description")
+    if not name or not description:
+        return jsonify({"error": "Tous les champs sont obligatoires"}), 400
+    add_project(name, description)
+    return jsonify({"message": "Projet ajouté avec succès!"}), 201
+
 
 # Lancer l'application Flask
 if __name__ == '__main__':

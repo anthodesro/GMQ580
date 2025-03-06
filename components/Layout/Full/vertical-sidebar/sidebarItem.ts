@@ -1,89 +1,96 @@
-import {
-  LayoutDashboardIcon,BorderAllIcon,
-  AlertCircleIcon,
-  CircleDotIcon,
-  BoxMultiple1Icon,
-  LoginIcon, CogIcon, ApertureIcon, UserPlusIcon
-} from 'vue-tabler-icons';
+import { 
+  IconSettingsCheck,
+  IconLayoutDashboard,
+  IconAlertCircle,
+  IconCircleDot,
+  IconBoxMultiple1,
+  IconTable,
+  IconUserCog,
+  IconBuildingBank,
+  IconFolderOpen,
+  IconFolderCog
+} from '@tabler/icons-vue';
 
 export interface menu {
   header?: string;
   title?: string;
-  icon?: any;
+  icon?: any;  // Icône est un composant Vue
   to?: string;
-  roles?: string[];  // Ajout du champ 'roles'
-  chip?: string;
-  BgColor?: string;
-  chipBgColor?: string;
-  chipColor?: string;
-  chipVariant?: string;
-  chipIcon?: string;
-  children?: menu[];
-  disabled?: boolean;
-  type?: string;
-  subCaption?: string;
+  roles?: string[];
 }
 
 const sidebarItem: menu[] = [
   { header: 'Home' },
   {
     title: 'Dashboard',
-    icon: LayoutDashboardIcon,
+    icon: { component: IconLayoutDashboard },  // ✅ Stocke l'icône sous forme d'objet
     to: '/',
-    roles: ['admin', 'user']  // Seuls 'admin' et 'user' y ont accès
+    roles: ['admin', 'user']
   },
-  { header: 'ui' },
+  { header: 'UI' },
   {
     title: "Alert",
-    icon: AlertCircleIcon,
+    icon: { component: IconAlertCircle },
     to: "/ui-components/alerts",
     roles: ['gestio', 'admin']
   },
   {
     title: "Button",
-    icon: CircleDotIcon,
+    icon: { component: IconCircleDot },
     to: "/ui-components/buttons",
-    roles: ['user']
+    roles: ['admin', 'user']
   },
   {
     title: "Cards",
-    icon: BoxMultiple1Icon,
+    icon: { component: IconBoxMultiple1 },
     to: "/ui-components/cards",
     roles: ['admin', 'user']
   },
   {
     title: "Tables",
-    icon: BorderAllIcon,
+    icon: { component: IconTable },
     to: "/ui-components/tables",
     roles: ['admin']
   },
 
- // Menu Projets
   { header: 'Projets' },
   {
-    title: 'Login',
-    icon: LoginIcon,
-    to: '/auth/login',
+    title: 'Mes Projets',
+    icon: { component: IconFolderOpen },
+    to: '/projet',
     roles: ['guest']
   },
+  {
+    title: 'Mes Projets',
+    icon: { component: IconFolderCog },
+    to: '/projets',
+    roles: ['admin', 'gestio']
+  },
+  {
+    title: 'Configuration',
+    icon: { component: IconFolderCog },
+    to: '/projets/config',
+    roles: ['admin', 'gestio']
+  },
 
- // Menu Admin
+  { header: 'Trésorerie' },
+  {
+    title: 'Banque',
+    icon: { component: IconBuildingBank },
+    to: '/tresorerie',
+    roles: ['guest', 'admin', 'gestio']
+  },
+
   { header: 'Admin' },
   {
-    title: 'Gestion Utilisateurs',
-    icon: ApertureIcon,
+    title: 'Utilisateurs',
+    icon: { component: IconUserCog },
     to: '/admin/GestionUser',
     roles: ['admin']
   },
   {
-    title: 'Register',
-    icon: UserPlusIcon,
-    to: '/admin/register',
-    roles: ['admin']
-  },
-  {
     title: 'Configurations',
-    icon: SettingsCheckIcon,
+    icon: { component: IconSettingsCheck },
     to: '/admin/config',
     roles: ['admin']
   },

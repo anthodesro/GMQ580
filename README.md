@@ -27,6 +27,7 @@ pip install flask flask_sqlalchemy
 npm install jwt-decode # Permet de lire le rôle de l'utilisateur stocker dans son token JWT
 npm install sqlite3
 pip install sqlcipher3
+npm install @tabler/icons-vue
 
 
 ```
