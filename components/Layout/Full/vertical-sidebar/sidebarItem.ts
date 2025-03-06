@@ -3,7 +3,7 @@ import {
   AlertCircleIcon,
   CircleDotIcon,
   BoxMultiple1Icon,
-  LoginIcon, MoodHappyIcon, ApertureIcon, UserPlusIcon
+  LoginIcon, CogIcon, ApertureIcon, UserPlusIcon
 } from 'vue-tabler-icons';
 
 export interface menu {
@@ -57,14 +57,24 @@ const sidebarItem: menu[] = [
     to: "/ui-components/tables",
     roles: ['admin']
   },
-  { header: 'Auth' },
+
+ // Menu Projets
+  { header: 'Projets' },
   {
     title: 'Login',
     icon: LoginIcon,
     to: '/auth/login',
     roles: ['guest']
   },
+
+ // Menu Admin
   { header: 'Admin' },
+  {
+    title: 'Gestion Utilisateurs',
+    icon: ApertureIcon,
+    to: '/admin/GestionUser',
+    roles: ['admin']
+  },
   {
     title: 'Register',
     icon: UserPlusIcon,
@@ -72,15 +82,9 @@ const sidebarItem: menu[] = [
     roles: ['admin']
   },
   {
-    title: 'Icons',
-    icon: MoodHappyIcon,
-    to: '/pages/icons',
-    roles: ['admin']
-  },
-  {
-    title: 'Gestion des utilisateurs',
-    icon: ApertureIcon,
-    to: '/admin/GestionUser',
+    title: 'Configurations',
+    icon: SettingsCheckIcon,
+    to: '/admin/config',
     roles: ['admin']
   },
 ];

@@ -97,23 +97,18 @@ const editUser = (userId) => {
                     :sort-by="['Nom utilisateur']"
                     :search="searchQuery" 
                 >
-                    <template v-slot:item.role="{ item }">
-                        <!-- Affiche le nom complet du rôle -->
+                    <template v-slot:default="{ item }">
+                        <!-- Affichage du rôle -->
                         <v-chip :color="getRoleColor(item.role)" class="ma-2">{{ getRoleName(item.role) }}</v-chip>
-                    </template>
 
-                    <!-- Colonne Action pour supprimer ou modifier un utilisateur -->
-                    <template v-slot:item.action="{ item }">
+                        <!-- Actions de l'utilisateur -->
                         <div class="d-flex justify-center">
-                            <!-- Icône pour modifier l'utilisateur -->
                             <EditIcon 
                                 class="mr-2" 
                                 style="cursor: pointer;" 
                                 @click="editUser(item.id)" 
                                 color="#0085db"
                             />
-                            
-                            <!-- Icône pour supprimer l'utilisateur -->
                             <TrashIcon 
                                 style="cursor: pointer;" 
                                 @click="deleteUser(item.id)" 
@@ -126,6 +121,7 @@ const editUser = (userId) => {
         </v-col>
     </v-row>
 </template>
+
 
 <style scoped>
 /* Définir la taille des icônes en utilisant la classe spécifique */

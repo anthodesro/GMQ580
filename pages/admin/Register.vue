@@ -27,7 +27,6 @@ const fetchUsers = async () => {
     }
 };
 
-
 // Récupérer les utilisateurs à l'initialisation du composant
 onMounted(fetchUsers);
 
@@ -43,7 +42,8 @@ const getRoleColor = (role) => {
 </script>
 
 <template>
-    <v-row class="maxWidth">
+  <v-row class="maxWidth">
+        <!-- Section de la Table des Utilisateurs -->
         <v-col cols="12" sm="12">
             <UiChildCard title="Table des utilisateurs">
                 <v-data-table
@@ -60,22 +60,8 @@ const getRoleColor = (role) => {
                 </v-data-table>
             </UiChildCard>
         </v-col>
-    </v-row>
-</template>
 
-
-<template>
-  <v-row class="maxWidth">
-        <v-col cols="12" sm="12">
-            <UiChildCard title="General Table">
-                <v-data-table
-                    v-model:sort-by="sortBy"
-                    :headers="headers"
-                    :items="desserts"
-                />
-            </UiChildCard>
-        </v-col>
-
+        <!-- Section pour l'authentification -->
         <v-col class="authentication">
             <v-container fluid class="pa-3">
                 <v-row class="h-100vh d-flex justify-center align-center">
